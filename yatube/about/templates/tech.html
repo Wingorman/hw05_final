@@ -1,0 +1,42 @@
+<!-- templates/about/author.html -->
+{% extends "base.html" %}
+{% block title %}Об авторе проекта{% endblock %}
+{% block content %}
+{% load user_filters %}
+  <main role="main" class="container">
+    <div class="row">
+      <!-- Левый вспомогательный блок -->
+      <div class="col-md-3 mb-3 mt-1">
+        <div class="card">
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">
+                <div class="h3">
+                  Технологии сайта
+                </div> 
+              </li>
+              <li class="list-group-item">
+                <div class="h6 text-muted">
+                  django v2.2.9,
+                  python v3.9.
+                </div>
+              </li>
+            </ul>                                               
+          </div>                    
+        </div>                
+      </div>
+      <!-- Тело страницы -->
+      <div class="col-md-9">
+        <div class="card-body">                    
+          <div class="card-text">
+            <p>
+              Ну в общем использовал django как основу, сочинял всё через python, а писал код в Visual Studio Code.
+              Очень сложно всё идет но думаю для новичка так и должно быть, стараюсь не сдаваться, но иногда хочется сильно.
+              Тяжело идут html страницы, поэтому у меня такой простое оформление...извините! Возможно позже я сдесь всё украшу и доработаю.
+            </p>
+          </div>                    
+        </div>                
+      </div>            
+    </div>        
+  </main>
+{% endblock %}

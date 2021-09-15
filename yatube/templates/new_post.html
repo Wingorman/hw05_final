@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if value == 'new' %} 
+    Добавить запись 
+{% elif value == 'edit' %}
+    Редактировать запись 
+{% endif %}
+{% endblock %}
+{% block content %}
+{% load user_filters %}
+<main role="main" class="container">
+  <div class="row">
+    <div class="col-md-8 mb-3 mt-1">
+      <div class="card">
+        <div class="card-header">
+          {% if value == "new" %}
+            Создать новую запись
+          {% elif value == "edit" %}
+            Редактировать запись
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+              <div class="form-group row"
+                   aria-required={{ field.field.required }}>
+              <label for="{{ field.id_for_label }}"
+                     class="col-md-12 col-form-label text-md-right">
+                {{ field.label }}{% if field.required %}
+                  <span class="required">*
+                              </span>{% endif %}</label>
+              <div class="col-md-12">
+                {{ field|addclass:"form-control" }}
+                {% if field.help_text %}
+                  <small id="{{ field.id_for_label }}-help"
+                         class="form-text text-muted">
+                    {{ field.help_text|safe }}</small>
+                {% endif %}
+              </div>
+              </div>
+            {% endfor %}
+            <div class="col-md-5 offset-md-9">
+              <button type="submit" class="btn btn-primary">
+                {% if value == "new" %}
+                  Создать запись
+                {% elif value == "edit" %}
+                  Сохранить
+                {% endif %}
+              </button>
+            </div>
+          </form>
+        </div> 
+      </div> 
+    </div> 
+  </div>
+</main>
+{% endblock %}
