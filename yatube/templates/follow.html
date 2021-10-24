@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Последние обновления на сайте{% endblock %}
+{% block header %}Последние обновления на сайте{% endblock %}
+{% block content %}
+    {% include 'includes/switcher.html' %}
+    {% for post in page %}
+    <h3>
+        Автор: <a class='p-2 text-dark' href='/{{ post.author.username }}/'>{{ post.author.get_full_name }}</a>, Дата публикации: {{ post.pub_date|date:"d M Y" }}
+    </h3>
+    <p>{{ post.text|linebreaksbr }}</p>
+    {% if not forloop.last %}<hr>{% endif %}
+    {% endfor %}
+
+    {% include "includes/paginator.html" %}
+
+{% endblock %}
