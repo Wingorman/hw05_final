@@ -112,28 +112,15 @@ def follow_index(request):
     return render(request, "follow.html", context)
 
 
-# @login_required
-# def profile_follow(request, username):
-#    author_to_be_followed = get_object_or_404(User, username=username)
-#    Follow.objects.create(user=request.user, author=author_to_be_followed)
-#    return redirect("profile", username=username)
-
-
 @login_required
 def profile_follow(request, username):
-    author = get_object_or_404(User, username=username)
-    if (
-        Follow.objects.filter(author=author, user=request.user).exists()
-        or request.user == author
-    ):
-        return redirect("profile", username=username)
-    Follow.objects.create(author=author, user=request.user)
-
+    author_to_be_followed = get_object_or_404(User, username=username)
+    Follow.objects.create(user=request.user, author=author_to_be_followed)
     return redirect("profile", username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    author = get_object_or_404(User, username=username)
+    followed_author = get_object_or_404(User, username=username)
     Follow.objects.filter(user=request.user, author=followed_author).delete()
     return redirect("profile", username=username)
