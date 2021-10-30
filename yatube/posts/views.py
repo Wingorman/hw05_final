@@ -30,7 +30,20 @@ def profile(request, username):
     paginator = Paginator(author_posts, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
-    return render(request, "profile.html", {"author": author, "page": page})
+    following = (
+        request.user.is_authenticated
+        and Follow.objects.filter(user=request.user, author=author).exists()
+    )
+    return render(
+        request,
+        "profile.html",
+        {
+            "author": author,
+            "page": page,
+            "following": following,
+        },
+    )
+    # return render(request, "profile.html", {"author": author, "page": page})
 
 
 def post_view(request, username, post_id):
