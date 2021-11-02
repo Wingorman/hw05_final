@@ -43,7 +43,6 @@ def profile(request, username):
             "following": following,
         },
     )
-    # return render(request, "profile.html", {"author": author, "page": page})
 
 
 def post_view(request, username, post_id):
