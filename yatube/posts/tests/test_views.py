@@ -2,7 +2,7 @@ from ..forms import PostForm
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-from posts.models import Group, Post, Comment
+from posts.models import Group, Post, Comment, Follow
 from django.core.cache import cache
 
 User = get_user_model()
@@ -137,6 +137,29 @@ class UrlTest(TestCase):
     def test_page_not_found(self):
         response = self.client.get("/shumaisimba/")
         self.assertEqual(response.status_code, 404)
+
+
+class FollowTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user1 = User.objects.create_user(username="user1")
+        cls.user2 = User.objects.create_user(username="user2")
+
+    def setUp(self):
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user1)
+        self.authorized_client.force_login(self.user2)
+
+    def test_follow(self):
+        """Авторизованный пользователь может подписываться на других пользователей"""
+        self.authorized_client.get(f"/profile/{self.user2.username}/follow")
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user1,
+                author=self.user2,
+            ).exists()
+        )
 
 
 class TestComment(TestCase):

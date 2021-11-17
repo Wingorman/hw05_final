@@ -116,23 +116,38 @@ def server_error(request):
 
 @login_required
 def follow_index(request):
-    # информация о текущем пользователе доступна в переменной request.user
-    followed_posts_list = Post.objects.filter(
+    posts_list = Post.objects.filter(
         author__following__user=request.user
-    )
-    context = {"followed_posts_list": followed_posts_list}
+    ).select_related("group")
+    paginator = Paginator(posts_list, 10)
+    page_number = request.GET.get("page")
+    page = paginator.get_page(page_number)
+    context = {
+        "page": page,
+    }
     return render(request, "follow.html", context)
 
 
 @login_required
 def profile_follow(request, username):
-    author_to_be_followed = get_object_or_404(User, username=username)
-    Follow.objects.create(user=request.user, author=author_to_be_followed)
+    author = get_object_or_404(User, username=username)
+    # Надо исправить: Обязательно используем  .exists() .
+    # Никаких .count() или len(.all())
+    if (
+        Follow.objects.filter(author=author, user=request.user).exists()
+        or request.user == author
+    ):
+        return redirect("profile", username=username)
+    Follow.objects.create(author=author, user=request.user)
+
     return redirect("profile", username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    followed_author = get_object_or_404(User, username=username)
-    Follow.objects.filter(user=request.user, author=followed_author).delete()
+    author = get_object_or_404(User, username=username)
+    follow_qs = Follow.objects.filter(author=author, user=request.user)
+    if follow_qs.exists():
+        follow_qs.delete()
+
     return redirect("profile", username=username)
