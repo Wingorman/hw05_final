@@ -139,27 +139,72 @@ class UrlTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class FollowTest(TestCase):
+class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user1 = User.objects.create_user(username="user1")
-        cls.user2 = User.objects.create_user(username="user2")
+        cls.author = User.objects.create_user(username="auth")
+        cls.group = Group.objects.create(
+            title="Тестовая группа",
+            slug="test-slug",
+            description="Описание тестовой группы",
+        )
+        cls.post = Post.objects.create(
+            text="текст поста",
+            author=cls.author,
+            group=cls.group,
+            pk=61,
+        )
 
     def setUp(self):
+        # Создаем неавторизованный клиент
+        self.guest_client = Client()
+        # Создаем авторизованый клиент
+        self.user = User.objects.create_user(username="Wings")
         self.authorized_client = Client()
-        self.authorized_client.force_login(self.user1)
-        self.authorized_client.force_login(self.user2)
+        self.authorized_client.force_login(self.user)
+        self.author_client = Client()
+        self.author_client.force_login(self.author)
+        cache.clear()
 
-    def test_follow(self):
-        """Авторизованный пользователь может подписываться на других пользователей"""
-        self.authorized_client.get(f"/profile/{self.user2.username}/follow")
+    def test_follow_other_author(self):
+        response = self.authorized_client.post(
+            reverse("profile_follow", args={self.author})
+        )
         self.assertTrue(
             Follow.objects.filter(
-                user=self.user1,
-                author=self.user2,
+                user=self.user,
+                author=self.author,
             ).exists()
         )
+        response = self.authorized_client.post(
+            reverse("profile_unfollow", args={self.author})
+        )
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user,
+                author=self.author,
+            ).exists()
+        )
+
+    def test_follow_author_appears_at_desired_location(self):
+        following_count = Follow.objects.count()
+        following = Follow.objects.create(user=self.user, author=self.author)
+        response = self.authorized_client.get(reverse("follow_index"))
+        response_count = len(response.context["page"])
+        self.assertEqual(response_count, following_count + 1)
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user,
+                author=self.author,
+            ).exists()
+        )
+        following = Follow.objects.filter(
+            user=self.user, author=self.author
+        ).delete()
+        response = self.authorized_client.get(reverse("follow_index"))
+        response_count_last = len(response.context["page"])
+        self.assertEqual(response_count_last, following_count)
 
 
 class TestComment(TestCase):
