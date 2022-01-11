@@ -168,7 +168,7 @@ class PostPagesTests(TestCase):
         cache.clear()
 
     def test_follow_other_author(self):
-        response = self.authorized_client.post(
+        self.authorized_client.post(
             reverse("profile_follow", args={self.author})
         )
         self.assertTrue(
@@ -177,7 +177,7 @@ class PostPagesTests(TestCase):
                 author=self.author,
             ).exists()
         )
-        response = self.authorized_client.post(
+        self.authorized_client.post(
             reverse("profile_unfollow", args={self.author})
         )
         self.assertFalse(
@@ -189,7 +189,7 @@ class PostPagesTests(TestCase):
 
     def test_follow_author_appears_at_desired_location(self):
         following_count = Follow.objects.count()
-        following = Follow.objects.create(user=self.user, author=self.author)
+        Follow.objects.create(user=self.user, author=self.author)
         response = self.authorized_client.get(reverse("follow_index"))
         response_count = len(response.context["page"])
         self.assertEqual(response_count, following_count + 1)
@@ -199,9 +199,7 @@ class PostPagesTests(TestCase):
                 author=self.author,
             ).exists()
         )
-        following = Follow.objects.filter(
-            user=self.user, author=self.author
-        ).delete()
+        Follow.objects.filter(user=self.user, author=self.author).delete()
         response = self.authorized_client.get(reverse("follow_index"))
         response_count_last = len(response.context["page"])
         self.assertEqual(response_count_last, following_count)
