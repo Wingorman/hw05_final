@@ -167,7 +167,7 @@ class PostPagesTests(TestCase):
         self.author_client.force_login(self.author)
         cache.clear()
 
-    def test_follow_other_author(self):
+    def test_follow_author(self):
         self.authorized_client.post(
             reverse("profile_follow", args={self.author})
         )
