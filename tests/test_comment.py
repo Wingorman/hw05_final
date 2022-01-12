@@ -40,12 +40,24 @@ class TestComment:
             'Свойство `text` модели `Comment` должно быть текстовым `TextField`'
         )
 
-        created_field = search_field(model_fields, 'created')
-        assert created_field is not None, 'Добавьте дату и время проведения события `created` модели `Comment`'
-        assert type(created_field) == fields.DateTimeField, (
-            'Свойство `created` модели `Comment` должно быть датой и время `DateTimeField`'
+        pub_date_field_name = 'created'
+        pub_date_field = search_field(model_fields, 'pub_date')
+        if pub_date_field is not None:
+            pub_date_field_name = 'pub_date'
+        else:
+            pub_date_field = search_field(model_fields, 'created')
+            if pub_date_field is not None:
+                pub_date_field_name = 'created'
+
+        assert pub_date_field is not None, (
+            f'Добавьте дату и время проведения события `{pub_date_field_name}` модели `Comment`'
         )
-        assert created_field.auto_now_add, 'Свойство `created` модели `Comment` должно быть `auto_now_add`'
+        assert type(pub_date_field) == fields.DateTimeField, (
+            f'Свойство `{pub_date_field_name}` модели `Comment` должно быть датой и время `DateTimeField`'
+        )
+        assert pub_date_field.auto_now_add, (
+            f'Свойство `{pub_date_field_name}` модели `Comment` должно быть `auto_now_add`'
+        )
 
         author_field = search_field(model_fields, 'author_id')
         assert author_field is not None, 'Добавьте пользователя, автор который создал событие `author` модели `Comment`'
@@ -68,50 +80,50 @@ class TestComment:
     @pytest.mark.django_db(transaction=True)
     def test_comment_add_view(self, client, post):
         try:
-            response = client.get(f'/{post.author.username}/{post.id}/comment')
+            response = client.get(f'/posts/{post.id}/comment')
         except Exception as e:
-            assert False, f'''Страница `/<username>/<post_id>/comment/` работает неправильно. Ошибка: `{e}`'''
-        if response.status_code in (301, 302) and response.url == f'/{post.author.username}/{post.id}/comment/':
-            url = f'/{post.author.username}/{post.id}/comment/'
+            assert False, f'''Страница `/posts/<post_id>/comment/` работает неправильно. Ошибка: `{e}`'''
+        if response.status_code in (301, 302) and response.url == f'/posts/{post.id}/comment/':
+            url = f'/posts/{post.id}/comment/'
         else:
-            url = f'/{post.author.username}/{post.id}/comment'
+            url = f'/posts/{post.id}/comment'
         assert response.status_code != 404, (
-            'Страница `/<username>/<post_id>/comment/` не найдена, проверьте этот адрес в *urls.py*'
+            'Страница `/posts/<post_id>/comment/` не найдена, проверьте этот адрес в *urls.py*'
         )
 
         response = client.post(url, data={'text': 'Новый коммент!'})
         if not(response.status_code in (301, 302) and response.url.startswith('/auth/login')):
             assert False, (
                 'Проверьте, что не авторизованного пользователя '
-                '`/<username>/<post_id>/comment/` отправляете на страницу авторизации'
+                '`/posts/<post_id>/comment/` отправляете на страницу авторизации'
             )
 
     @pytest.mark.django_db(transaction=True)
     def test_comment_add_auth_view(self, user_client, post):
         try:
-            response = user_client.get(f'/{post.author.username}/{post.id}/comment')
+            response = user_client.get(f'/posts/{post.id}/comment')
         except Exception as e:
-            assert False, f'''Страница `/<username>/<post_id>/comment/` работает неправильно. Ошибка: `{e}`'''
-        if response.status_code in (301, 302) and response.url == f'/{post.author.username}/{post.id}/comment/':
-            url = f'/{post.author.username}/{post.id}/comment/'
+            assert False, f'''Страница `/posts/<post_id>/comment/` работает неправильно. Ошибка: `{e}`'''
+        if response.status_code in (301, 302) and response.url == f'/posts/{post.id}/comment/':
+            url = f'/posts/{post.id}/comment/'
         else:
-            url = f'/{post.author.username}/{post.id}/comment'
+            url = f'/posts/{post.id}/comment'
         assert response.status_code != 404, (
-            'Страница `/<username>/<post_id>/comment/` не найдена, проверьте этот адрес в *urls.py*'
+            'Страница `/posts/<post_id>/comment/` не найдена, проверьте этот адрес в *urls.py*'
         )
 
         text = 'Новый коммент 94938!'
         response = user_client.post(url, data={'text': text})
 
         assert response.status_code in (301, 302), (
-            'Проверьте, что со страницы `/<username>/<post_id>/comment/` '
+            'Проверьте, что со страницы `/posts/<post_id>/comment/` '
             'после создания комментария перенаправляете на страницу поста'
         )
         comment = Comment.objects.filter(text=text, post=post, author=post.author).first()
         assert comment is not None, (
-            'Проверьте, что вы создаёте новый комментарий `/<username>/<post_id>/comment/`'
+            'Проверьте, что вы создаёте новый комментарий `/posts/<post_id>/comment/`'
         )
-        assert response.url.startswith(f'/{post.author.username}/{post.id}'), (
+        assert response.url.startswith(f'/posts/{post.id}'), (
             'Проверьте, что перенаправляете на страницу поста '
-            '`/<username>/<post_id>/` после добавления нового комментария'
+            '`/posts/<post_id>/` после добавления нового комментария'
         )
