@@ -57,15 +57,15 @@ class TaskCreateFormTests(TestCase):
             "text": "Тест",
             "image": uploaded,
         }
-        self.authorized_client.post(reverse("new_post"), data=form_data)
+        self.authorized_client.post(reverse("create"), data=form_data)
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertTrue(Post.objects.filter(text=form_data["text"]).exists())
 
     def test_anonymous_not_add_post(self):
         """Неавторизованный пользователь не может опубликовать пост"""
         counter = Post.objects.count()
-        response = self.anonymous.get(reverse("new_post"))
-        urls = "/auth/login/?next=/new/"
+        response = self.anonymous.get(reverse("create"))
+        urls = "/auth/login/?next=/create/"
         self.assertEqual(Post.objects.count(), counter)
         self.assertRedirects(response, urls, status_code=HTTPStatus.FOUND)
 
@@ -76,7 +76,6 @@ class TaskCreateFormTests(TestCase):
             reverse(
                 "post_edit",
                 kwargs={
-                    "username": self.author.username,
                     "post_id": self.post.id,
                 },
             ),
@@ -85,5 +84,5 @@ class TaskCreateFormTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertEqual(Post.objects.count(), counter)
         response = self.authorized_client.get(reverse("index"))
-        self.assertEqual(response.context["page"][0].text, "ИзменилТекст")
-        self.assertEqual(response.context["page"][0].author, self.author)
+        self.assertEqual(response.context["page_obj"][0].text, "ИзменилТекст")
+        self.assertEqual(response.context["page_obj"][0].author, self.author)

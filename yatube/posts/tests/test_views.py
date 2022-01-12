@@ -46,8 +46,8 @@ class UrlTest(TestCase):
         # Собираем в словарь пары "имя_html_шаблона: reverse(name)"
         templates_page_names = {
             "index.html": reverse("index"),
-            "new_post.html": reverse("new_post"),
-            "group.html": (reverse("group", kwargs={"slug": "test-slug"})),
+            "new_post.html": reverse("create"),
+            "group_list.html": (reverse("group", kwargs={"slug": "test-slug"})),
         }
         # Проверяем, что при обращении к name
         # вызывается соответствующий HTML-шаблон
@@ -64,14 +64,14 @@ class UrlTest(TestCase):
             )
         )
         self.assertEqual(
-            response.context["page"][0].text, self.contexted["text"]
+            response.context["page_obj"][0].text, self.contexted["text"]
         )
         self.assertEqual(
-            response.context["page"][0].author.username,
+            response.context["page_obj"][0].author.username,
             self.contexted["author"],
         )
         self.assertEqual(
-            response.context["page"][0].group.title, self.contexted["title2"]
+            response.context["page_obj"][0].group.title, self.contexted["title2"]
         )
 
     def test_group_page(self):
@@ -88,7 +88,7 @@ class UrlTest(TestCase):
 
     def test_new_post_page(self):
         """проверяет форма на странице создания поста"""
-        response = self.authorized_client.get(reverse("new_post"))
+        response = self.authorized_client.get(reverse("create"))
         form_fields = PostForm
         self.assertIn("form", response.context)
         self.assertIsInstance(response.context["form"], form_fields)
@@ -96,7 +96,7 @@ class UrlTest(TestCase):
     def test_edit_post_page(self):
         """проверяет формы на странице редактирования поста"""
         response = self.authorized_client.get(
-            f"/{ self.author }/{ self.post.id }/edit/"
+            f"/posts/{ self.post.id }/edit/"
         )
         form_fields = PostForm
         self.assertIn("form", response.context)
@@ -108,10 +108,10 @@ class UrlTest(TestCase):
             reverse("profile", kwargs={"username": f"{self.author}"})
         )
         self.assertEqual(
-            response.context["page"][0].text, self.contexted["text"]
+            response.context["page_obj"][0].text, self.contexted["text"]
         )
         self.assertEqual(
-            response.context["page"][0].author.username,
+            response.context["page_obj"][0].author.username,
             self.contexted["author"],
         )
 
@@ -132,7 +132,7 @@ class UrlTest(TestCase):
         response = self.guest_client.get(
             reverse("group", kwargs={"slug": "Rtest-slug2"})
         )
-        self.assertEqual(len(response.context["page"]), 0)
+        self.assertEqual(len(response.context["page_obj"]), 0)
 
     def test_page_not_found(self):
         response = self.client.get("/shumaisimba/")
@@ -191,7 +191,7 @@ class PostPagesTests(TestCase):
         following_count = Follow.objects.count()
         Follow.objects.create(user=self.user, author=self.author)
         response = self.authorized_client.get(reverse("follow_index"))
-        response_count = len(response.context["page"])
+        response_count = len(response.context["page_obj"])
         self.assertEqual(response_count, following_count + 1)
         self.assertTrue(
             Follow.objects.filter(
@@ -201,7 +201,7 @@ class PostPagesTests(TestCase):
         )
         Follow.objects.filter(user=self.user, author=self.author).delete()
         response = self.authorized_client.get(reverse("follow_index"))
-        response_count_last = len(response.context["page"])
+        response_count_last = len(response.context["page_obj"])
         self.assertEqual(response_count_last, following_count)
 
 
@@ -226,7 +226,6 @@ class TestComment(TestCase):
             group=cls.test_group,
         )
         kwargs_post = {
-            "username": cls.test_post.author.username,
             "post_id": cls.test_post.id,
         }
         post_URL = reverse("post", kwargs=kwargs_post)
@@ -234,8 +233,8 @@ class TestComment(TestCase):
         username = cls.test_post.author.username
         cls.templates_reverse_names = {
             reverse("index"): "index.html",
-            reverse("group", kwargs={"slug": "Comtest-slug"}): "group.html",
-            reverse("new_post"): "new_post.html",
+            reverse("group", kwargs={"slug": "Comtest-slug"}): "group_list.html",
+            reverse("create"): "new_post.html",
             reverse("profile", kwargs={"username": username}): "profile.html",
             post_URL: "post.html",
             post_edit_URL: "new_post.html",
@@ -252,7 +251,7 @@ class TestComment(TestCase):
         comment_count = Comment.objects.count()
         author = self.post_another_author.author.username
         post_id = self.post_another_author.id
-        kwargs = {"username": author, "post_id": post_id}
+        kwargs = {"post_id": post_id}
         reverse_name = reverse("add_comment", kwargs=kwargs)
         form_data = {
             "text": "Тестовый комментарий",
@@ -285,20 +284,20 @@ class PaginatorViewsTest(TestCase):
 
     def test_first_page_contains_ten_records(self):
         response = self.client.get(reverse("index"))
-        self.assertEqual(len(response.context.get("page").object_list), 10)
+        self.assertEqual(len(response.context.get("page_obj").object_list), 10)
 
     def test_second_page_contains_three_records(self):
         response = self.client.get(reverse("index") + "?page=2")
-        self.assertEqual(len(response.context.get("page").object_list), 3)
+        self.assertEqual(len(response.context.get("page_obj").object_list), 3)
 
     def test_group_10post(self):
         response = self.client.get(
             reverse("group", kwargs={"slug": "slugforgroup"})
         )
-        self.assertEqual(len(response.context.get("page").object_list), 10)
+        self.assertEqual(len(response.context.get("page_obj").object_list), 10)
 
     def test_profile_10post(self):
         response = self.client.get(
             reverse("profile", kwargs={"username": f"{self.author}"})
         )
-        self.assertEqual(len(response.context.get("page").object_list), 10)
+        self.assertEqual(len(response.context.get("page_obj").object_list), 10)

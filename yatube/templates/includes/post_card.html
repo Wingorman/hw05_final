@@ -5,19 +5,19 @@
   {% endthumbnail %}
   <div class="card-body"> 
     <p class="card-text"> 
-      <a href="/{{ author.username }}/"> 
+      <a href="/profile/{{ author.username }}/"> 
         <strong class="d-block text-gray-dark">@{{author.username}}</strong> 
       </a> 
       {{ post.text|linebreaksbr }} 
     </p> 
     <div class="d-flex justify-content-between align-items-center"> 
       <div class="btn-group ">  
-        <a class="btn btn-sm text-muted" href="/{{ author.username }}/{{ post.id }}/" role="button"> 
+        <a class="btn btn-sm text-muted" href="/posts/{{ post.id }}/" role="button"> 
           Просмотр записи 
         </a> 
           <!-- Эту ссылку вы подключите в финальном задании спринта --> 
         {% if user.username == author.username %} 
-          <a class="btn btn-sm text-muted" href="/{{ author.username }}/{{ post.id }}/edit" role="button"> 
+          <a class="btn btn-sm text-muted" href="/posts/{{ post.id }}/edit" role="button"> 
           Редактировать 
         </a> 
         {% endif %} 

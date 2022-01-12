@@ -12,7 +12,7 @@ def index(request):
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
-    return render(request, "index.html", {"page": page})
+    return render(request, "index.html", {"page_obj": page})
 
 
 def group_posts(request, slug):
@@ -21,7 +21,7 @@ def group_posts(request, slug):
     paginator = Paginator(posts, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
-    return render(request, "group.html", {"group": group, "page": page})
+    return render(request, "group_list.html", {"group": group, "page_obj": page})
 
 
 def profile(request, username):
@@ -39,15 +39,15 @@ def profile(request, username):
         "profile.html",
         {
             "author": author,
-            "page": page,
+            "page_obj": page,
             "following": following,
         },
     )
 
 
-def post_view(request, username, post_id):
-    author = get_object_or_404(User, username=username)
-    post = get_object_or_404(Post, id=post_id, author=author)
+def post_view(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    author = get_object_or_404(User, username=post.author.username)
     post_list = author.posts.all()
     post_count = post_list.count()
     comments = Comment.objects.filter(post=post)
@@ -63,47 +63,46 @@ def post_view(request, username, post_id):
 
 
 @login_required
-def new_post(request):
+def create(request):
     if request.method == "POST":
         form = PostForm(request.POST or None, files=request.FILES or None)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
-            return redirect("index")
+            return redirect("profile", request.user.username)
         return render(request, "new_post.html", {"form": form, "value": "new"})
     form = PostForm()
     return render(request, "new_post.html", {"form": form, "value": "new"})
 
 
 @login_required
-def post_edit(request, username, post_id):
+def post_edit(request, post_id):
     post_object = get_object_or_404(
-        Post, id=post_id, author__username=username
+        Post, id=post_id
     )
     if request.user != post_object.author:
-        return redirect("post", username=username, post_id=post_id)
+        return redirect("post", post_id=post_id)
     form = PostForm(
         request.POST or None, files=request.FILES or None, instance=post_object
     )
     if form.is_valid():
         form.save()
-        return redirect("post", username=username, post_id=post_id)
+        return redirect("post", post_id=post_id)
     return render(request, "new_post.html", {"form": form, "value": "edit"})
 
 
 @login_required
-def add_comment(request, username, post_id):
-    author = get_object_or_404(User, username=username)
-    post = get_object_or_404(Post, id=post_id, author=author)
+def add_comment(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
         comment = form.save(commit=False)
         comment.author = request.user
         comment.post = post
         comment.save()
-        return redirect("post", username, post_id)
-    return redirect("post", username, post_id)
+        return redirect("post", post_id)
+    return redirect("post", post_id)
 
 
 def page_not_found(request, exception):
@@ -112,6 +111,10 @@ def page_not_found(request, exception):
 
 def server_error(request):
     return render(request, "misc/500.html", status=500)
+
+
+def permission_denied(request, exception):
+    return render(request, "misc/403.html", status=403)
 
 
 @login_required
@@ -123,7 +126,7 @@ def follow_index(request):
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
     context = {
-        "page": page,
+        "page_obj": page,
     }
     return render(request, "follow.html", context)
 

@@ -25,7 +25,7 @@
             </a>
          {% endif %}
       </div>  
-      {% for post in page %}  
+      {% for post in page_obj %}  
       {% include "includes/post_card.html" %}
       {% endfor %}  
       {% include "includes/paginator.html" %} 

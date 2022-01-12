@@ -22,13 +22,13 @@ class PostsURLTests(TestCase):
         )
         cls.templates_url_names_open = {
             "index.html": "/",
-            "group.html": f"/group/{cls.group.slug}/",
-            "profile.html": f"/{cls.author.username}/",
-            "post.html": f"/{cls.author.username}/{cls.post.id}/",
+            "group_list.html": f"/group/{cls.group.slug}/",
+            "profile.html": f"/profile/{cls.author.username}/",
+            "post.html": f"/posts/{cls.post.id}/",
         }
         cls.templates_url_names_close = (
-            ("new_post.html", "/new/"),
-            ("new_post.html", f"/{cls.author.username}/{cls.post.id}/edit/"),
+            ("new_post.html", "/create/"),
+            ("new_post.html", f"/posts/{cls.post.id}/edit/"),
         )
 
     def setUp(self):
@@ -74,20 +74,20 @@ class PostsURLTests(TestCase):
                 response = self.not_author_user.get(reverse_name)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
         response = self.not_author_user.get(
-            f"/{self.author.username}/{self.post.id}/edit/"
+            f"/posts/{self.post.id}/edit/"
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        response = self.not_author_user.get("/new/")
+        response = self.not_author_user.get("/create/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_use_correct_template(self):
         """URL-адрес использует соответствующий шаблон"""
-        cache.clear()
         for template, reverse_name in self.templates_url_names_open.items():
-            with self.subTest():
+            with self.subTest(reverse_name=reverse_name, template=template):
+                cache.clear()
                 response = self.authorized_user.get(reverse_name)
                 self.assertTemplateUsed(response, template)
         response = self.authorized_user.get(
-            f"/{self.author.username}/{self.post.id}/edit/"
+            f"/posts/{self.post.id}/edit/"
         )
         self.assertTemplateUsed(response, "new_post.html")
