@@ -21,7 +21,9 @@ def group_posts(request, slug):
     paginator = Paginator(posts, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
-    return render(request, "group_list.html", {"group": group, "page_obj": page})
+    return render(
+        request, "group_list.html", {"group": group, "page_obj": page}
+    )
 
 
 def profile(request, username):
@@ -78,9 +80,7 @@ def create(request):
 
 @login_required
 def post_edit(request, post_id):
-    post_object = get_object_or_404(
-        Post, id=post_id
-    )
+    post_object = get_object_or_404(Post, id=post_id)
     if request.user != post_object.author:
         return redirect("post", post_id=post_id)
     form = PostForm(
