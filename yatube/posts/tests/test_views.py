@@ -252,7 +252,7 @@ class TestComment(TestCase):
     def test_comment(self):
         """Только авторизированный пользователь может комментировать посты."""
         comment_count = Comment.objects.count()
-        author = self.post_another_author.author.username
+        self.post_another_author.author.username
         post_id = self.post_another_author.id
         kwargs = {"post_id": post_id}
         reverse_name = reverse("add_comment", kwargs=kwargs)
