@@ -29,9 +29,7 @@ urlpatterns = [
     ),
     path("profile/<str:username>/", views.profile, name="profile"),
     path("posts/<int:post_id>/", views.post_view, name="post"),
-    path(
-        "posts/<int:post_id>/edit/", views.post_edit, name="post_edit"
-    ),
+    path("posts/<int:post_id>/edit/", views.post_edit, name="post_edit"),
 ]
 
 if settings.DEBUG:
