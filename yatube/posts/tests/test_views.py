@@ -47,7 +47,9 @@ class UrlTest(TestCase):
         templates_page_names = {
             "index.html": reverse("index"),
             "new_post.html": reverse("create"),
-            "group_list.html": (reverse("group", kwargs={"slug": "test-slug"})),
+            "group_list.html": (
+                reverse("group", kwargs={"slug": "test-slug"})
+            ),
         }
         # Проверяем, что при обращении к name
         # вызывается соответствующий HTML-шаблон
@@ -71,7 +73,8 @@ class UrlTest(TestCase):
             self.contexted["author"],
         )
         self.assertEqual(
-            response.context["page_obj"][0].group.title, self.contexted["title2"]
+            response.context["page_obj"][0].group.title,
+            self.contexted["title2"],
         )
 
     def test_group_page(self):
@@ -95,9 +98,7 @@ class UrlTest(TestCase):
 
     def test_edit_post_page(self):
         """проверяет формы на странице редактирования поста"""
-        response = self.authorized_client.get(
-            f"/posts/{ self.post.id }/edit/"
-        )
+        response = self.authorized_client.get(f"/posts/{ self.post.id }/edit/")
         form_fields = PostForm
         self.assertIn("form", response.context)
         self.assertIsInstance(response.context["form"], form_fields)
@@ -233,7 +234,9 @@ class TestComment(TestCase):
         username = cls.test_post.author.username
         cls.templates_reverse_names = {
             reverse("index"): "index.html",
-            reverse("group", kwargs={"slug": "Comtest-slug"}): "group_list.html",
+            reverse(
+                "group", kwargs={"slug": "Comtest-slug"}
+            ): "group_list.html",
             reverse("create"): "new_post.html",
             reverse("profile", kwargs={"username": username}): "profile.html",
             post_URL: "post.html",
