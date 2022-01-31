@@ -1,6 +1,3 @@
-from tokenize import group
-from django.http import response
-from ..forms import PostForm
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
