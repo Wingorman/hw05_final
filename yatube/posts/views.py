@@ -6,7 +6,7 @@ from .forms import PostForm, CommentForm
 from django.views.decorators.cache import cache_page
 
 
-@cache_page(20 * 1)
+@cache_page(20)
 def index(request):
     post_list = Post.objects.all()
     paginator = Paginator(post_list, 10)
@@ -49,7 +49,7 @@ def profile(request, username):
 
 def post_view(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    author = get_object_or_404(User, username=post.author.username)
+    author = post.author
     post_list = author.posts.all()
     post_count = post_list.count()
     comments = Comment.objects.filter(post=post)

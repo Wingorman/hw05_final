@@ -1,3 +1,5 @@
+from tokenize import group
+from django.http import response
 from ..forms import PostForm
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
@@ -39,6 +41,16 @@ class UrlTest(TestCase):
             User.objects.create_user(username="Test_User")
         )
         cache.clear()
+
+    def test_cache_index(self):
+        response = self.authorized_client.get(reverse("index"))
+        Post.objects.get(
+            text=self.post.text, author=self.post.author, group=self.post.group
+        ).delete()
+        self.assertIn(self.post.text, response.content.decode("utf-8"))
+        cache.clear()
+        response = self.authorized_client.get(reverse("index"))
+        self.assertNotIn(self.post.text, response.content.decode("utf-8"))
 
     # Проверяем используемые шаблоны
     def test_pages_uses_correct_template(self):
@@ -89,56 +101,6 @@ class UrlTest(TestCase):
             response.context["group"].slug, self.contexted["slug"]
         )
 
-    def test_new_post_page(self):
-        """проверяет форма на странице создания поста"""
-        response = self.authorized_client.get(reverse("create"))
-        form_fields = PostForm
-        self.assertIn("form", response.context)
-        self.assertIsInstance(response.context["form"], form_fields)
-
-    def test_edit_post_page(self):
-        """проверяет формы на странице редактирования поста"""
-        response = self.authorized_client.get(f"/posts/{ self.post.id }/edit/")
-        form_fields = PostForm
-        self.assertIn("form", response.context)
-        self.assertIsInstance(response.context["form"], form_fields)
-
-    def test_profile_context(self):
-        """Добавление поста на страницу автора"""
-        response = self.authorized_client.get(
-            reverse("profile", kwargs={"username": f"{self.author}"})
-        )
-        self.assertEqual(
-            response.context["page_obj"][0].text, self.contexted["text"]
-        )
-        self.assertEqual(
-            response.context["page_obj"][0].author.username,
-            self.contexted["author"],
-        )
-
-    def test_post_in_right_group(self):
-        """Добавление поста в правильную группу"""
-        self.post = Post.objects.create(
-            text="Kaktak",
-            author=User.objects.create(username="Roman"),
-            group=Group.objects.create(
-                title="RGroup",
-                slug="Rtest-slug",
-            ),
-        )
-        self.group = Group.objects.create(
-            title="RGroup2",
-            slug="Rtest-slug2",
-        )
-        response = self.guest_client.get(
-            reverse("group", kwargs={"slug": "Rtest-slug2"})
-        )
-        self.assertEqual(len(response.context["page_obj"]), 0)
-
-    def test_page_not_found(self):
-        response = self.client.get("/shumaisimba/")
-        self.assertEqual(response.status_code, 404)
-
 
 class PostPagesTests(TestCase):
     @classmethod
@@ -178,6 +140,8 @@ class PostPagesTests(TestCase):
                 author=self.author,
             ).exists()
         )
+
+    def test_unfollow_author(self):
         self.authorized_client.post(
             reverse("profile_unfollow", args={self.author})
         )
@@ -252,7 +216,6 @@ class TestComment(TestCase):
     def test_comment(self):
         """Только авторизированный пользователь может комментировать посты."""
         comment_count = Comment.objects.count()
-        self.post_another_author.author.username
         post_id = self.post_another_author.id
         kwargs = {"post_id": post_id}
         reverse_name = reverse("add_comment", kwargs=kwargs)
@@ -274,24 +237,29 @@ class PaginatorViewsTest(TestCase):
             slug="slugforgroup",
         )
         cls.author = User.objects.create_user(username="Test_User2")
-        for _ in range(13):
-            Post.objects.create(
+        cls.posts = [
+            Post(
                 text="TestText",
                 author=cls.author,
                 group=cls.group,
             )
+            for i in range(13)
+        ]
+        Post.objects.bulk_create(cls.posts)
 
     def setUp(self):
         self.client = Client()
         cache.clear()
 
-    def test_first_page_contains_ten_records(self):
-        response = self.client.get(reverse("index"))
-        self.assertEqual(len(response.context.get("page_obj").object_list), 10)
-
-    def test_second_page_contains_three_records(self):
-        response = self.client.get(reverse("index") + "?page=2")
-        self.assertEqual(len(response.context.get("page_obj").object_list), 3)
+    def test_first_page_second_page_contains_records(self):
+        expected = [("", 10), ("?page=2", 3)]
+        for query_param, expected_post_count in expected:
+            with self.subTest(value=query_param):
+                response = self.client.get(reverse("index") + query_param)
+                self.assertEqual(
+                    len(response.context.get("page_obj").object_list),
+                    expected_post_count,
+                )
 
     def test_group_10post(self):
         response = self.client.get(

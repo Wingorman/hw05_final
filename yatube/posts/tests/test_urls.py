@@ -3,7 +3,11 @@ from django.core.cache import cache
 from django.test import Client, TestCase
 from ..models import Group, Post, User
 
-# from django.urls import reverse
+
+class ViewTests(TestCase):
+    def test_page_not_found(self):
+        response = self.client.get("/shumaisimba/")
+        self.assertEqual(response.status_code, 404)
 
 
 class PostsURLTests(TestCase):
@@ -73,9 +77,9 @@ class PostsURLTests(TestCase):
             with self.subTest():
                 response = self.not_author_user.get(reverse_name)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
-        response = self.not_author_user.get(
-            f"/posts/{self.post.id}/edit/"
-        )
+        response = self.not_author_user.get(f"/posts/{self.post.id}/edit/")
+        redirect_url = f"/posts/{self.post.id}/"
+        self.assertRedirects(response, redirect_url)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         response = self.not_author_user.get("/create/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -87,7 +91,5 @@ class PostsURLTests(TestCase):
                 cache.clear()
                 response = self.authorized_user.get(reverse_name)
                 self.assertTemplateUsed(response, template)
-        response = self.authorized_user.get(
-            f"/posts/{self.post.id}/edit/"
-        )
+        response = self.authorized_user.get(f"/posts/{self.post.id}/edit/")
         self.assertTemplateUsed(response, "new_post.html")
