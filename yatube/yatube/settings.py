@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = "-!&%f8%gifg&u9u$i%d_tuzehmghsf5$=-0$fi=5-ncvj8eclb"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "51.250.10.159",
@@ -133,13 +133,11 @@ USE_TZ = True
 
 # задаём произвольный URL, который будет использоваться для запросов к статическим файлам
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(
-    BASE_DIR, "static/"
-)  # папка, в которой будет лежать статика
 # теперь логотип можно будет запросить по адресу sitename.ex**/static/**images/logo.png
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static/') # папка, в которой будет лежать статика НАДО ЧТОБ ЭТО РАБОТАЛО СО СТАТИКОЙ !!!
 
 # задаём адрес директории, куда командой *collectstatic* будет собрана вся статика
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 # STATIC_ROOT = os.path.join(BASE_DIR, "static_root")
 
 MEDIA_URL = "/media/"
